@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Shailee | A Birthday Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Satoshi:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0c0a09; }
+        body { margin: 0; background: var(--bg); font-family: 'Satoshi', sans-serif; overflow-x: hidden; color: white; }
+        h1, h2 { font-family: 'Playfair Display', serif; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .text-gradient { background: linear-gradient(to right, #fbcfe8, #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-grad { background: linear-gradient(135deg, #db2777, #e11d48); transition: all 0.3s ease; }
+        .btn-grad:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(219, 39, 119, 0.5); }
+        #canvas-container { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100vh; }
+        .step { display: none; opacity: 0; }
+        .active { display: flex; opacity: 1; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen">
+
+    <div id="canvas-container"></div>
+
+    <div class="fixed top-8 w-64 h-2 bg-white/10 rounded-full overflow-hidden">
+        <div id="progress" class="h-full w-0 bg-gradient-to-r from-pink-500 to-rose-600 transition-all duration-500"></div>
+    </div>
+
+    <main id="main-card" class="glass p-8 md:p-12 rounded-3xl w-[90%] max-w-2xl shadow-2xl text-center">
+        
+        <div id="step-1" class="step active flex-col items-center">
+            <div class="text-6xl mb-6 animate-pulse">❤️</div>
+            <h1 class="text-5xl font-bold text-gradient mb-4">Hey Princess,</h1>
+            <p class="text-lg text-gray-300 mb-8">I built a little world for you, just to bring a smile to your face on your special day.</p>
+            <button onclick="nextStep(1)" class="btn-grad px-8 py-3 rounded-full font-bold text-white">Let's Begin</button>
+        </div>
+
+        <div id="step-2" class="step flex-col items-center">
+            <div class="text-6xl mb-6">🎉</div>
+            <h1 class="text-4xl font-bold text-gradient mb-4">Happy Birthday My Dearest Moon! Shailee</h1>
+            <p class="text-lg text-gray-300 mb-8">Another year of you making the world brighter. Your existence is a gift, and I'm so lucky to witness it.</p>
+            <button onclick="nextStep(2)" class="btn-grad px-8 py-3 rounded-full font-bold text-white">There's more...</button>
+        </div>
+
+        <div id="step-3" class="step flex-col w-full">
+            <h2 class="text-3xl font-bold mb-6 text-gradient">A Few Things I Adore About You</h2>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="col-span-2 glass p-4 rounded-xl"><strong>✨ Your Unmatched Kindness</strong><p class="text-sm">The genuine warmth you show is truly rare.</p></div>
+                <div class="glass p-4 rounded-xl"><strong>😊 That Smile</strong><p class="text-sm">It's a work of art.</p></div>
+                <div class="glass p-4 rounded-xl"><strong>🌟 You are everything</strong><p class="text-sm">Everything I yearn for.</p></div>
+            </div>
+            <button onclick="nextStep(3)" class="btn-grad px-8 py-3 rounded-full font-bold text-white self-center">Remember this?</button>
+        </div>
+
+        <div id="step-4" class="step flex-col items-center">
+            <h2 class="text-3xl font-bold mb-6">That One Time...</h2>
+            <div class="glass p-4 rounded-lg rotate-3 hover:rotate-0 transition-transform duration-500 mb-6">
+                <img src="https://media.istockphoto.com/id/1388989894/photo/full-moon-above-the-clouds.jpg?s=612x612&w=0&k=20&c=ZKBClnW0Ir2v3NbOV8NIP37V0wzyzeWHxpEsXXpf1ww=" class="w-48 h-48 object-cover rounded shadow-lg">
+                <p class="mt-2 text-sm italic">What I call You</p>
+            </div>
+            <p class="mb-6">When We met I told you are not a Coincidence and its true.</p>
+            <button onclick="nextStep(4)" class="btn-grad px-8 py-3 rounded-full font-bold text-white">One last thing...</button>
+        </div>
+
+        <div id="step-5" class="step flex-col items-center">
+            <div class="text-6xl mb-6">🎂</div>
+            <h1 class="text-4xl font-bold text-gradient mb-4">My Wish For You</h1>
+            <p id="wish-text" class="text-md text-gray-200 mb-8 leading-relaxed">Wishing you a very happy birthday my Princess Shailee, May You achieve the whole world and Your dreams come true. I pray Kanha Jii provides you a healthy and happy life ahead by making all worries vanish.</p>
+            <button id="celebrate-btn" onclick="celebrate()" class="btn-grad px-8 py-3 rounded-full font-bold text-white">Celebrate!</button>
+        </div>
+    </main>
+
+    <script>
+        // Three.js Background
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const hearts = [];
+        for(let i=0; i<20; i++) {
+            const geo = new THREE.IcosahedronGeometry(Math.random() * 0.5 + 0.2);
+            const mat = new THREE.MeshBasicMaterial({color: 0xff69b4, wireframe: true});
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(Math.random()*10-5, Math.random()*10-5, -5);
+            scene.add(mesh);
+            hearts.push(mesh);
+        }
+        camera.position.z = 2;
+        function animate() {
+            requestAnimationFrame(animate);
+            hearts.forEach((h, i) => { h.rotation.y += 0.01; h.position.y += Math.sin(Date.now() * 0.001 + i) * 0.01; });
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Step Navigation
+        function nextStep(current) {
+            document.getElementById(`step-${current}`).classList.remove('active');
+            document.getElementById(`step-${current+1}`).classList.add('active');
+            document.getElementById('progress').style.width = ((current) * 25) + "%";
+            gsap.fromTo(`#step-${current+1}`, {opacity: 0, y: 20}, {opacity: 1, y: 0, duration: 0.8});
+        }
+
+        // Finale
+        function celebrate() {
+            document.getElementById('celebrate-btn').style.display = 'none';
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            const finalMsg = "Again Happy Birthday, my dear Love... may all your Wishes come true and May You have a great day and future ahead of you and wishing you to achieve everything in life ❤️";
+            document.getElementById('wish-text').innerText = finalMsg;
+            gsap.to(hearts, { y: 20, opacity: 0, duration: 2 });
+        }
+    </script>
+</body>
+</html>
